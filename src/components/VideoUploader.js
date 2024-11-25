@@ -2,12 +2,13 @@
 
 import React, { useState, useRef } from 'react';
 import VideoInferenceGraph from './VideoInferenceGraph';
+import { sampleData } from './sampleData';
 
 const VideoUploader = () => {
   const [video, setVideo] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [csvData, setCsvData] = useState([]); // 비디오 추론 데이터
+  const [csvData, setCsvData] = useState(sampleData);
   const [deepfakeProbability, setDeepfakeProbability] = useState(0.01); // 이미지 추론 데이터
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -112,7 +113,7 @@ const VideoUploader = () => {
           return { time: time.trim(), deepfake_probability: deepfake_probability.trim() };
         });
 
-      setCsvData(parsedCsvData); // 그래프 데이터 상태 설정
+      // setCsvData(parsedCsvData); // 그래프 데이터 상태 설정
     } catch (error) {
       console.error('Error analyzing video:', error);
     } finally {
@@ -162,11 +163,11 @@ const VideoUploader = () => {
             <video
               ref={videoRef}
               src={video.url}
-              className="w-[720px] h-[405px] rounded-lg shadow-lg bg-black"
+              className="w-[520px] h-[270px] rounded-lg shadow-lg bg-black"
               controls={true}
             />
           ) : (
-            <div className="w-[720px] h-[405px] rounded-lg shadow-lg bg-gray-300 flex items-center justify-center">
+            <div className="w-[520px] h-[270px] rounded-lg shadow-lg bg-gray-300 flex items-center justify-center">
               <span className="text-gray-500 text-2xl">No video uploaded</span>
             </div>
           )}
@@ -200,7 +201,7 @@ const VideoUploader = () => {
         <div className="flex flex-col justify-center">
           {/* 딥페이크 확률 표시 */}
           <div className="flex flex-col items-center justify-center">
-            <h2 className="text-xl font-bold text-gray-800">Deepfake Probability</h2>
+            <h2 className="text-s font-bold text-gray-800">Deepfake Probability</h2>
             <p
               className={`text-4xl text-white font-extrabold mt-8 rounded-lg bg-green-400 px-4 ${
                 deepfakeProbability > 50 ? 'bg-red-600' : 'bg-green-400'

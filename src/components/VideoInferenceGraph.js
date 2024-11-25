@@ -10,7 +10,14 @@ const VideoInferenceGraph = ({ csvData }) => {
   }
 
   const labels = csvData.map((row) => row.time || 'Unknown');
-  const probabilities = csvData.map((row) => parseFloat(row.deepfake_probability) || 0);
+  const probabilities = csvData.map((row) => parseFloat(row.deepfake_probability) || 0); 
+  const maxProbability = Math.max(...probabilities);
+  const minProbability = Math.min(...probabilities);
+  
+  // 여유 공간을 위해 범위를 약간 확장 (5% 정도)
+  const padding = (maxProbability - minProbability) * 0.05;
+  const yMax = Math.min(100, maxProbability + padding); // 100을 넘지 않도록
+  const yMin = Math.max(0, minProbability - padding);   // 0보다 작아지지 않도록
 
   const data = {
     labels,
@@ -34,13 +41,16 @@ const VideoInferenceGraph = ({ csvData }) => {
     },
     scales: {
       x: { title: { display: true, text: 'Time (s)' } },
-      y: { title: { display: true, text: 'Probability (%)' }, min: 0, max: 100 },
+      y: { 
+        title: { display: true, text: 'Probability (%)' }, 
+        min: yMin,  // 자동 계산된 최소값
+        max: yMax,  // 자동 계산된 최대값
+      },
     },
   };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-center text-xl font-bold mb-4">Deepfake Analysis Results</h2>
+    <div className="mt-8 w-[800px] h-[400px]">
       <Line data={data} options={options} />
     </div>
   );
