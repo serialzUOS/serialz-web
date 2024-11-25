@@ -138,7 +138,23 @@ const VideoUploader = () => {
           Upload Video
         </button>
       </div>
-
+     {/* 영상 정보 */}
+      {video && (
+      <div className="mt-4 text-left">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-sm text-gray-500">File name</div>
+            <div className="text-lg font-medium text-gray-900">{video.file.name}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Size</div>
+            <div className="text-lg font-medium text-gray-900">
+              {(video.file.size / (1024 * 1024)).toFixed(2)} MB
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
       <div className="flex flex-row space-x-12">
         {/* 비디오 플레이어 */}
         <div className="relative">
@@ -154,53 +170,49 @@ const VideoUploader = () => {
               <span className="text-gray-500 text-2xl">No video uploaded</span>
             </div>
           )}
-          <div className="mt-6 flex justify-center space-x-4">
+          <div className="mt-6 flex justify-center">
             <button
               onClick={handlePlayPause}
-              className="bg-green-500 hover:bg-green-700 text-white font-bold text-xl py-3 px-6 rounded-lg"
+              className="w-full max-w-3xl bg-blue-500 hover:bg-blue-700 text-white font-bold text-xl py-3 px-6 rounded-lg"
               disabled={!video}
             >
-              {isPlaying ? 'Pause' : 'Play'}
+              {isPlaying ? 'Pause ■' : 'Play ▶'}
             </button>
+          </div>
+          <div className="mt-6 flex justify-center space-x-4">
             <button
               onClick={handleAnalyzeRealtime}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold text-xl py-3 px-6 rounded-lg"
+              className="w-full max-w-xl bg-blue-200 hover:bg-blue-700 text-blue-500 font-bold text-xl py-3 px-6 rounded-lg"
               disabled={!video || isAnalyzing}
             >
               Analyze Frame-by-Frame
             </button>
             <button
               onClick={handleAnalyzeVideo}
-              className="bg-purple-500 hover:bg-purple-700 text-white font-bold text-xl py-3 px-6 rounded-lg"
+              className="w-full max-w-xl bg-blue-200 hover:bg-blue-700 text-blue-500 font-bold text-xl py-3 px-6 rounded-lg"
               disabled={!video || isAnalyzing}
             >
               Analyze Full Video
             </button>
           </div>
-          {video && (
-            <div className="mt-4 text-gray-600 text-lg">
-              File name: {video.file.name}
-              <br />
-              Size: {(video.file.size / (1024 * 1024)).toFixed(2)} MB
-            </div>
-          )}
         </div>
+        <div className="flex flex-col justify-center">
+          {/* 딥페이크 확률 표시 */}
+          <div className="flex flex-col items-center justify-center">
+            <h2 className="text-xl font-bold text-gray-800">Deepfake Probability</h2>
+            <p
+              className={`text-4xl text-white font-extrabold mt-8 rounded-lg bg-green-400 px-4 ${
+                deepfakeProbability > 50 ? 'bg-red-600' : 'bg-green-400'
+              }`}
+            >
+              {deepfakeProbability.toFixed(2)}%
+            </p>
+          </div>
 
-        {/* 딥페이크 확률 표시 */}
-        <div className="flex flex-col items-center justify-center bg-gray-200 p-12 rounded-lg shadow-lg">
-          <h2 className="text-4xl font-bold text-gray-800">Deepfake Probability</h2>
-          <p
-            className={`text-6xl font-extrabold mt-8 ${
-              deepfakeProbability > 50 ? 'text-red-600' : 'text-green-600'
-            }`}
-          >
-            {deepfakeProbability.toFixed(2)}%
-          </p>
-        </div>
-
-        {/* 그래프 컴포넌트 */}
-        <div className="w-full max-w-4xl">
-          <VideoInferenceGraph csvData={csvData} />
+          {/* 그래프 컴포넌트 */}
+          <div className="w-full max-w-4xl">
+            <VideoInferenceGraph csvData={csvData} />
+          </div>
         </div>
       </div>
     </div>
