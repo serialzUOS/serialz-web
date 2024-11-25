@@ -122,42 +122,42 @@ const VideoUploader = () => {
 
   return (
     <div className="flex flex-col items-center space-y-6 p-8">
-      {/* 파일 업로드 및 버튼 */}
-      <div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="video/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold text-2xl py-4 px-8 rounded-lg"
-        >
-          Upload Video
-        </button>
-      </div>
-     {/* 영상 정보 */}
-      {video && (
-      <div className="mt-4 text-left">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-row space-x-12">
+        <div className="relative flex flex-col">
+          {/* 파일 업로드 및 버튼 */}
           <div>
-            <div className="text-sm text-gray-500">File name</div>
-            <div className="text-lg font-medium text-gray-900">{video.file.name}</div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-white hover:bg-blue-200 text-blue-500 font-bold text-l my-2 py-2 px-4 rounded-lg border border-blue-500"
+            >
+              Upload Video
+            </button>
           </div>
-          <div>
-            <div className="text-sm text-gray-500">Size</div>
-            <div className="text-lg font-medium text-gray-900">
-              {(video.file.size / (1024 * 1024)).toFixed(2)} MB
+          {/* 영상 정보 */}
+          {video && (
+          <div className="mt-4 text-left">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-gray-500">File name</div>
+                <div className="text-lg font-medium text-gray-900">{video.file.name}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Size</div>
+                <div className="text-lg font-medium text-gray-900">
+                  {(video.file.size / (1024 * 1024)).toFixed(2)} MB
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-      )}
-      <div className="flex flex-row space-x-12">
-        {/* 비디오 플레이어 */}
-        <div className="relative">
+          )}
+          {/* 비디오 플레이어 */}
           {video ? (
             <video
               ref={videoRef}
@@ -196,6 +196,7 @@ const VideoUploader = () => {
             </button>
           </div>
         </div>
+        <div className="h-10rm w-px bg-black mr-4"></div> {/* 세로 선 */}
         <div className="flex flex-col justify-center">
           {/* 딥페이크 확률 표시 */}
           <div className="flex flex-col items-center justify-center">
