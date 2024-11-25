@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import VideoInferenceGraph from './VideoInferenceGraph';
 import { sampleData } from './sampleData';
+import Image from 'next/image';
 
 const VideoUploader = () => {
   const [video, setVideo] = useState(null);
@@ -61,7 +62,7 @@ const VideoUploader = () => {
         const formData = new FormData();
         formData.append('image', blob);
 
-        const response = await fetch('${process.env.REACT_APP_API_BASE_URL}/image-inference/', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/image-inference/`, {
           method: 'POST',
           body: formData,
         });
@@ -91,7 +92,7 @@ const VideoUploader = () => {
       const formData = new FormData();
       formData.append('video', video.file);
 
-      const response = await fetch('${process.env.REACT_APP_API_BASE_URL}/api/video-inference/', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/video-inference/`, {
         method: 'POST',
         body: formData,
       });
@@ -159,18 +160,35 @@ const VideoUploader = () => {
           </div>
           )}
           {/* 비디오 플레이어 */}
+          <div className="relative"> {/* 컨테이너에 relative 추가 */}
           {video ? (
-            <video
-              ref={videoRef}
-              src={video.url}
-              className="w-[520px] h-[270px] rounded-lg shadow-lg bg-black"
-              controls={true}
-            />
+            <>
+              <video
+                ref={videoRef}
+                src={video.url}
+                className="w-[520px] h-[270px] rounded-lg shadow-lg bg-black"
+                controls={true}
+              />
+              {/* 딥페이크 도장 오버레이 */}
+              {deepfakeProbability > 50 && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                 <Image
+                  src='/deepfake.png'
+                  alt='Vercel Logo'
+                  className='vercelLogo'
+                  width={100}
+                  height={24}
+                  priority
+                />
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-[520px] h-[270px] rounded-lg shadow-lg bg-gray-300 flex items-center justify-center">
               <span className="text-gray-500 text-2xl">No video uploaded</span>
             </div>
           )}
+        </div>
           <div className="mt-6 flex justify-center">
             <button
               onClick={handlePlayPause}
