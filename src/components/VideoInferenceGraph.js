@@ -13,7 +13,7 @@ const VideoInferenceGraph = ({ csvData }) => {
   const probabilities = csvData.map((row) => parseFloat(row.deepfake_probability) || 0); 
   const maxProbability = Math.max(...probabilities);
   const minProbability = Math.min(...probabilities);
-  
+
   // 여유 공간을 위해 범위를 약간 확장 (5% 정도)
   const padding = (maxProbability - minProbability) * 0.05;
   const yMax = Math.min(100, maxProbability + padding); // 100을 넘지 않도록
@@ -35,12 +35,20 @@ const VideoInferenceGraph = ({ csvData }) => {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, // 비율 유지 비활성화
     plugins: {
       legend: { display: true, position: 'top' },
       tooltip: { enabled: true },
     },
     scales: {
-      x: { title: { display: true, text: 'Time (s)' } },
+      x: { 
+        title: { display: true, text: 'Time (s)' },
+        ticks: {
+          callback: function(value, index, values) {
+            return parseFloat(this.getLabelForValue(value)).toFixed(2); // 소수점 둘째 자리까지 표시
+          },
+        },
+      },
       y: { 
         title: { display: true, text: 'Probability (%)' }, 
         min: yMin,  // 자동 계산된 최소값
@@ -50,8 +58,10 @@ const VideoInferenceGraph = ({ csvData }) => {
   };
 
   return (
-    <div className="mt-8 w-[800px] h-[400px]">
-      <Line data={data} options={options} />
+    <div className="mt-8 w-full overflow-x-auto"> {/* 가로 스크롤 가능 */}
+      <div className="min-w-[1400px] h-[500px]"> {/* 더 넓고 높게 설정 */}
+        <Line data={data} options={options} />
+      </div>
     </div>
   );
 };
