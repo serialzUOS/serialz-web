@@ -5,7 +5,7 @@ const VideoUploadPage = () => {
   return (
     <main className="min-h-screen py-8 bg-white">
       <h1 className="text-3xl font-bold text-center mb-8 text-black">
-        Video Upload & Player
+        Realeyez
       </h1>
       <VideoUploader />
     </main>

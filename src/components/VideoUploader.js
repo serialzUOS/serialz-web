@@ -15,6 +15,13 @@ const VideoUploader = () => {
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  const calculateAverageProbability = (data) => {
+    if (!data || data.length === 0) return 0;
+    const sum = data.reduce((acc, curr) => acc + parseFloat(curr.deepfake_probability), 0);
+    return sum / data.length;
+  };
+  
+
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -192,17 +199,17 @@ const VideoUploader = () => {
                   controls={true}
                   onEnded={handleVideoEnd}
                 />
-                {deepfakeProbability > 50 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Image
-                      src="/assets/deepfake.png"
-                      alt="Deepfake Detected"
-                      width={100}
-                      height={24}
-                      priority
-                    />
-                  </div>
-                )}
+             {calculateAverageProbability(csvData) > 50 && (
+              <div className="absolute top-2 right-2 pointer-events-none"> {/* 위치 수정 */}
+                <Image
+                  src="/assets/deepfake.png"
+                  alt="Deepfake Detected"
+                  width={100}
+                  height={24}
+                  priority
+                />
+              </div>
+            )}
               </>
             ) : (
               <div className="w-[520px] h-[270px] rounded-lg shadow-lg bg-gray-300 flex items-center justify-center">
