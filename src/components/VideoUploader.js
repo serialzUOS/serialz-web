@@ -115,7 +115,7 @@ const VideoUploader = () => {
           const frameTimestamp = videoRef.current.currentTime; // 현재 프레임의 타임스탬프
           workerRef.current.postMessage({
             blob,
-            apiUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/image-inference/`,
+            apiUrl: 'http://serialz.site/image-inference/',
             requestId: currentRequestId, // 현재 요청 ID 전달
             frameTimestamp, // 타임스탬프 전달
           });
@@ -161,7 +161,7 @@ const VideoUploader = () => {
       const formData = new FormData();
       formData.append('video', video.file);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/video-inference/`, {
+      const response = await fetch('http://serialz.site/video-inference/', {
         method: 'POST',
         body: formData,
       });
