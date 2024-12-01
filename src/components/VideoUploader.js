@@ -59,6 +59,8 @@ const VideoUploader = () => {
       }
       const url = URL.createObjectURL(file);
       setVideo({ file, url });
+      setDeepfakeProbability(0.0)
+      setCsvData(sampleData)
     }
   };
 
@@ -181,6 +183,7 @@ const VideoUploader = () => {
         });
 
       setCsvData(parsedCsvData); // 그래프 데이터 상태 설정
+      setDeepfakeProbability(calculateAverageProbability(parsedCsvData))
     } catch (error) {
       console.error('Error analyzing video:', error);
     } finally {
@@ -249,7 +252,7 @@ const VideoUploader = () => {
                   controls={true}
                   onEnded={handleVideoEnd}
                 />
-             {calculateAverageProbability(csvData) > 50 && (
+             {deepfakeProbability > 50 && (
               <div className="absolute top-2 right-2 pointer-events-none"> {/* 위치 수정 */}
                 <Image
                   src="/assets/deepfake.png"
