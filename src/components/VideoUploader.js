@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import VideoInferenceGraph from './VideoInferenceGraph';
 import { sampleData } from './sampleData';
 import Image from 'next/image';
@@ -12,8 +12,36 @@ const VideoUploader = () => {
   const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false); // 비디오 분석 상태
   const [csvData, setCsvData] = useState(sampleData);
   const [deepfakeProbability, setDeepfakeProbability] = useState(0.0);
+  const [activeRequestId, setActiveRequestId] = useState(null); // 현재 활성화된 요청 ID
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
+  const workerRef = useRef(null);
+
+  useEffect(() => {
+    // 웹 워커 초기화
+    workerRef.current = new Worker('/worker.js');
+  
+    workerRef.current.onmessage = (event) => {
+      const { success, result, error, requestId } = event.data;
+  
+      // 응답이 현재 활성화된 요청에 해당하는지 확인
+      if (requestId === activeRequestId) {
+        if (success) {
+          setDeepfakeProbability(result.deepfake_probability || 0);
+        } else {
+          console.error('Worker error:', error);
+        }
+      } else {
+        console.log(`Ignored response for inactive request ID: ${requestId}`);
+      }
+    };
+  
+    return () => {
+      workerRef.current.terminate(); // 컴포넌트 언마운트 시 워커 종료
+    };
+  }, [activeRequestId]);
+  
+  
 
   const calculateAverageProbability = (data) => {
     if (!data || data.length === 0) return 0;
@@ -35,71 +63,92 @@ const VideoUploader = () => {
   };
 
   const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      videoRef.current.pause(); // 영상 일시정지
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play(); // 영상 재생
+      setIsPlaying(true);
     }
   };
 
-  // 실시간 프레임 분석
   const handleAnalyzeRealtime = async () => {
     if (!videoRef.current || !video) return;
-    setIsAnalyzingFrame(true); // 프레임 분석 상태 시작
-
+    setIsAnalyzingFrame(true);
+  
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-
+    canvas.width = videoRef.current.videoWidth / 2; // 해상도 줄이기
+    canvas.height = videoRef.current.videoHeight / 2;
+  
     let isRunning = true;
-
+    let frameCount = 0;
+    const startTime = performance.now();
+    const currentRequestId = Date.now(); // 현재 요청 ID 생성
+    setActiveRequestId(currentRequestId); // 활성화된 요청 ID 설정
+  
+    let lastProcessedTime = 0; // 마지막 처리된 프레임 타임스탬프
+    const frameInterval = 100; // 프레임 간격 (밀리초 단위, 100ms 간격으로 처리)
+  
     const processFrame = async () => {
       if (!isRunning || videoRef.current.paused || videoRef.current.ended) {
-        setIsAnalyzingFrame(false); // 프레임 분석 종료
+        setIsAnalyzingFrame(false);
+        const elapsedTime = (performance.now() - startTime) / 1000;
+        console.log(`Processed ${frameCount} frames in ${elapsedTime.toFixed(2)} seconds`);
+        console.log(`Average FPS: ${(frameCount / elapsedTime).toFixed(2)} FPS`);
         return;
       }
-
-      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
-
-      if (blob) {
-        const formData = new FormData();
-        formData.append('image', blob);
-
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/image-inference/`, {
-            method: 'POST',
-            body: formData,
+  
+      const currentTime = performance.now();
+      // 마지막 처리된 타임스탬프에서 frameInterval만큼의 시간이 지나야 처리
+      if (currentTime - lastProcessedTime >= frameInterval) {
+        lastProcessedTime = currentTime;
+        frameCount++;
+  
+        // 현재 프레임을 캔버스에 그리기
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
+  
+        if (blob) {
+          const frameTimestamp = videoRef.current.currentTime; // 현재 프레임의 타임스탬프
+          workerRef.current.postMessage({
+            blob,
+            apiUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/image-inference/`,
+            requestId: currentRequestId, // 현재 요청 ID 전달
+            frameTimestamp, // 타임스탬프 전달
           });
-
-          if (response.ok) {
-            const result = await response.json();
-            setDeepfakeProbability(result.deepfake_probability || 0);
-          } else {
-            console.error('Frame analysis failed');
-          }
-        } catch (error) {
-          console.error('Error analyzing frame:', error);
         }
       }
-
-      if (isRunning) {
-        requestAnimationFrame(processFrame);
+  
+      requestAnimationFrame(processFrame);
+    };
+  
+    // 워커에서 응답 처리
+    workerRef.current.onmessage = (event) => {
+      const { success, result, error, requestId, frameTimestamp } = event.data;
+  
+      // 현재 활성화된 요청 ID와 응답의 요청 ID가 일치하는지 확인
+      if (requestId === currentRequestId) {
+        if (success) {
+          // 영상의 현재 타임스탬프와 응답의 타임스탬프가 일치하는지 확인
+          if (frameTimestamp === videoRef.current.currentTime) {
+            setDeepfakeProbability(result.deepfake_probability || 0);
+          }
+        } else {
+          console.error('Worker error:', error);
+        }
       }
     };
-
+  
     videoRef.current.play();
     requestAnimationFrame(processFrame);
-
+  
     return () => {
       isRunning = false;
-      setIsAnalyzingFrame(false); // 프레임 분석 종료
+      setIsAnalyzingFrame(false);
     };
   };
+  
 
   // 전체 비디오 분석
   const handleAnalyzeVideo = async () => {
@@ -142,7 +191,8 @@ const VideoUploader = () => {
   const handleVideoEnd = () => {
     if (videoRef.current) {
       videoRef.current.currentTime = 0; // 영상 재생 위치를 0초로 설정
-      setIsPlaying(false); // 버튼을 'Play' 상태로 변경
+      setIsPlaying(false); // 재생 상태 초기화
+      setActiveRequestId(null); // 활성화된 요청 ID 초기화
     }
   };
 
